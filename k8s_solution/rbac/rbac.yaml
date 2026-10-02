@@ -1,0 +1,83 @@
+---
+# ── ServiceAccount for all app pods ──────────────────────────────────────────
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: collabflow-service-account
+  namespace: collabflow
+  labels:
+    app: collabflow
+automountServiceAccountToken: false  # Only mount when needed
+
+---
+# ── Role: App services read ConfigMaps and Secrets ────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: collabflow-app-role
+  namespace: collabflow
+  labels:
+    app: collabflow
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list"]    # For health checks and service discovery
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+
+---
+# ── RoleBinding: Bind role to service account ─────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: collabflow-app-rolebinding
+  namespace: collabflow
+  labels:
+    app: collabflow
+subjects:
+  - kind: ServiceAccount
+    name: collabflow-service-account
+    namespace: collabflow
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: collabflow-app-role
+
+---
+# ── ClusterRole: Minimal for metrics scraping ─────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: collabflow-metrics-reader
+  labels:
+    app: collabflow
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/metrics", "pods", "services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["extensions", "networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
+    verbs: ["get"]
+
+---
+# ── ClusterRoleBinding for metrics ────────────────────────────────────────────
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: collabflow-metrics-reader-binding
+  labels:
+    app: collabflow
+subjects:
+  - kind: ServiceAccount
+    name: collabflow-service-account
+    namespace: collabflow
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: collabflow-metrics-reader
