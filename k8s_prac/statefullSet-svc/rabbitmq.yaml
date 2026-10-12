@@ -1,0 +1,107 @@
+---
+################################################################################
+################################# StatefulSet ##################################
+################################################################################
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+  namespace: collabflow 
+  labels:
+    name: rabbitmq
+    tier: messaging
+spec:
+  replica: 1
+  selector:
+    matchLables:
+      name: rabbitmq
+      tier: messaging
+  template:
+    metadata:
+      labels:
+        name: rabbitmq
+        tier: messaging
+    spec:
+      containers:
+        - name: mongo
+          image: rabbitmq:3.12-management-alpine
+          ports: 
+            - containerPort: 5672
+            - containerPort: 15672  
+
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: RABBITMQ_DEFAULT_USER
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: rbbitmq-credentials
+                  key: RABBITMQ_DEFAULT_PASS
+                  
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "150m"
+              memory: "512Mi"
+          
+          livenessProbe:
+            exec:
+              command: ["rabbitmq-diagnostics", "ping"]
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+
+          redinessProbe:
+            exec:
+              command: ["rabbitmq-cli", "check_running"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 10
+            
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+              
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: manual
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+
+################################################################################
+################################### Service ####################################
+################################################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq
+  namespace: collabflow
+  labels:
+    name: rabbitmq
+    tier: network
+spec:
+  clusterIP: None
+  selector:
+    name: rabbitmq
+    tier: messaging
+  ports:
+    - name: amqp
+      port: 5672
+      targetPort: 5672
+    - name: management
+      port: 15672
+      targetPort: 15672
+    
+   

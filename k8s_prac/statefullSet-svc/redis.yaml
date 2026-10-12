@@ -1,0 +1,89 @@
+---
+################################################################################
+################################# StatefulSet ##################################
+################################################################################
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: collabflow 
+  labels:
+    name: redis
+    tier: cache
+spec:
+  replica: 1
+  selector:
+    matchLables:
+      name: redis
+      tier: cache
+  template:
+    metadata:
+      labels:
+        name: redis
+        tier: cache
+    spec:
+      containers:
+        - name: mongo
+          image: redis:7.2-alpine
+          command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+          ports: 
+            - containerPort: 6379
+              
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "150m"
+              memory: "512Mi"
+          
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "--eval", "ping"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          redinessProbe:
+            exec:
+              command: ["redis-cli", "--eval", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+              
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: manual
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+
+################################################################################
+################################### Service ####################################
+################################################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: collabflow
+  labels:
+    name: redis
+    tier: network
+spec:
+  clusterIP: None
+  selector:
+    name: redis
+    tier: cache
+  ports:
+    - port: 6379
+      targetPort: 6379
+    
+   
