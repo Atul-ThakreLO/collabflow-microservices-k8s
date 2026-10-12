@@ -1,0 +1,95 @@
+############################################################
+######################## Deployment ########################
+############################################################
+
+apiVersion: apps/v1
+kind: Deployments
+metadata:
+  name: user-service
+  namespace: collabflow
+  labels:
+    name: user-service
+    app: collabflow
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLables:
+      name: user-service
+  template:
+    metadata:
+      name: user-service
+      labels:
+        name: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: user-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: user-service-config
+          env:
+            - name: RABBITMQ_URL
+              secretKeyRef:
+                - name: raabitmq-credentials
+                  key: RABBITMQ_URL
+
+          resource:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory : "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+          redinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 8
+
+
+---
+
+############################################################
+######################### Service ##########################
+############################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service-svc
+  namespace: collabflow
+  labels:
+    name: user-service-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: user-service
+  ports:
+    - name: http
+      port: 3002
+      targetPort: 3002

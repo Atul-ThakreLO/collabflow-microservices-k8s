@@ -1,0 +1,98 @@
+############################################################
+######################## Deployment ########################
+############################################################
+
+apiVersion: apps/v1
+kind: Deployments
+metadata:
+  name: notification-service
+  namespace: collabflow
+  labels:
+    name: notification-service
+    app: collabflow
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLables:
+      name: notification-service
+  template:
+    metadata:
+      name: notification-service
+      labels:
+        name: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: notification-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: 
+            - containerPort: 3004
+          envFrom:
+            - configMapRef:
+                name: notification-service-config
+          env:
+            - name: RABBITMQ_URL
+              secretKeyRef:
+                - name: raabitmq-credentials
+                  key: RABBITMQ_URL
+
+            - name: SMTP_USER
+              secretKeyRef:
+                - name: smtp-credentials
+                  key: SMTP_USER
+
+            - name: SMTP_PASS
+              secretKeyRef:
+                - name: smtp-credentials
+                  key: SMTP_PASS
+
+          resource:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory : "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          redinessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          
+
+---
+
+############################################################
+######################### Service ##########################
+############################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service-svc
+  namespace: collabflow
+  labels:
+    name: notification-service-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: notification-service
+  ports:
+    - name: http
+      port: 3004
+      targetPort: 3004
+      

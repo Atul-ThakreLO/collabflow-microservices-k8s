@@ -1,0 +1,88 @@
+############################################################
+######################## Deployment ########################
+############################################################
+
+apiVersion: apps/v1
+kind: Deployments
+metadata:
+  name: analytics-service
+  namespace: collabflow
+  labels:
+    name: analytics-service
+    app: collabflow
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLables:
+      name: analytics-service
+  template:
+    metadata:
+      name: analytics-service
+      labels:
+        name: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: analytics-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: 
+            - containerPort: 3005
+          envFrom:
+            - configMapRef:
+                name: analytics-service-config
+          env:
+            - name: RABBITMQ_URL
+              secretKeyRef:
+                - name: raabitmq-credentials
+                  key: RABBITMQ_URL
+
+          resource:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "200m"
+              memory : "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          redinessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          
+
+---
+
+############################################################
+######################### Service ##########################
+############################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service-svc
+  namespace: collabflow
+  labels:
+    name: analytics-service-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: analytics-service
+  ports:
+    - name: http
+      port: 3005
+      targetPort: 3005
+      

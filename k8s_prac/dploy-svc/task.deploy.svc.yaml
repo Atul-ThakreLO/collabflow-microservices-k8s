@@ -1,0 +1,96 @@
+############################################################
+######################## Deployment ########################
+############################################################
+
+apiVersion: apps/v1
+kind: Deployments
+metadata:
+  name: task-service
+  namespace: collabflow
+  labels:
+    name: task-service
+    app: collabflow
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLables:
+      name: task-service
+  template:
+    metadata:
+      name: task-service
+      labels:
+        name: task-service
+    spec:
+      containers:
+        - name: task-service
+          image: task-service:latest
+          imagePullPolicy: IfNotPresent
+          ports: 
+            - containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: task-service-config
+          env:
+            - name: RABBITMQ_URL
+              secretKeyRef:
+                - name: raabitmq-credentials
+                  key: RABBITMQ_URL
+
+          resource:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory : "512Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+          redinessProbe:
+            httpGet:
+              path: /ready
+              port: 3003
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialSelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 5
+          
+
+---
+
+############################################################
+######################### Service ##########################
+############################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: task-service-svc
+  namespace: collabflow
+  labels:
+    name: task-service-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: task-service
+  ports:
+    - name: http
+      port: 3003
+      targetPort: 3003
+      

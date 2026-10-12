@@ -1,0 +1,89 @@
+############################################################
+######################## Deployment ########################
+############################################################
+
+apiVersion: apps/v1
+kind: Deployments
+metadata:
+  name: api-gateway
+  namespace: collabflow
+  labels:
+    name: api-gateway
+    app: collabflow
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLables:
+      name: api-gateway
+  template:
+    metadata:
+      name: api-gateway
+      labels:
+        name: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          ports: 
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: api-gateway-config
+          resource:
+            requests:
+              cpu: "200m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory : "256Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          redinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 5
+                
+---
+
+############################################################
+######################### Service ##########################
+############################################################
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway-svc
+  namespace: collabflow
+  labels:
+    name: api-gateway-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: api-gateway
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      
