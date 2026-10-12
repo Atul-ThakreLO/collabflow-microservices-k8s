@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: task-service-config
+  namespace: collabflow
+  labels:
+    name: task-service
+data:
+  PORT: "3003"
+  NODE_ENV: "production"
+  MONGO_URI: "mongodb://mongo-tasks:27017/collabflow_tasks"
+  LOG_LEVEL: "info"

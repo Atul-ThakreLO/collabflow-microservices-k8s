@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-config
+  namespace: collabflow
+data:
+  RABBITMQ_URL: "amqp://admin:$(RABBITMQ_PASSWORD)@rabbitmq:5672"
