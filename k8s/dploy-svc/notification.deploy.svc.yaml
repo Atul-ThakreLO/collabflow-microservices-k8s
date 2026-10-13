@@ -37,18 +37,21 @@ spec:
                 name: notification-service-config
           env:
             - name: RABBITMQ_URL
-              secretKeyRef:
-                - name: raabitmq-credentials
+              valueFrom:
+                secretKeyRef:
+                  name: raabitmq-credentials
                   key: RABBITMQ_URL
 
             - name: SMTP_USER
-              secretKeyRef:
-                - name: smtp-credentials
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-credentials
                   key: SMTP_USER
 
             - name: SMTP_PASS
-              secretKeyRef:
-                - name: smtp-credentials
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-credentials
                   key: SMTP_PASS
 
           resource:

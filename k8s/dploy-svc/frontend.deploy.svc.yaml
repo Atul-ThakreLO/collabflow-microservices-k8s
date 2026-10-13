@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployments
 metadata:
   name: frontend
+  namespace: collabflow
   labels:
     name: frontend
     app: collabflow
@@ -31,15 +32,6 @@ spec:
           imagePullPolicy: IfNotPresent
           ports: 
             - containerPort: 80
-          envFrom:
-            - configMapRef:
-                name: frontend-config
-          env:
-            - name: RABBITMQ_URL
-              secretKeyRef:
-                - name: raabitmq-credentials
-                  key: RABBITMQ_URL
-
           resource:
             requests:
               cpu: "100m"

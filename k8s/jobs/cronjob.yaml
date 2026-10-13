@@ -49,8 +49,8 @@ spec:
                 limits:
                   memory: "64Mi"
                   cpu: "100m"
-              securityContext:
-                allowPrivilegeEscalation: false
-                readOnlyRootFilesystem: true
-                runAsNonRoot: true
-                runAsUser: 1000
+              # securityContext:
+              #   allowPrivilegeEscalation: false
+              #   readOnlyRootFilesystem: true
+              #   runAsNonRoot: true
+              #   runAsUser: 1000

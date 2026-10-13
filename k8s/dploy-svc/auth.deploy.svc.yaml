@@ -37,16 +37,19 @@ spec:
                 name: auth-service-config
           env:
             - name: JWT_SECRET
-              secretKeyRef:
-                name: auth-service-secrets
-                key:  JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key:  JWT_SECRET
             - namw: JWT_REFRESH_SECRET
-              secretKeyRef:
-                name: auth-service-secrets
-                key: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-service-secrets
+                  key: JWT_REFRESH_SECRET
             - name: RABBITMQ_URL
-              secretKeyRef:
-                - name: raabitmq-credentials
+              valueFrom:
+                secretKeyRef:
+                  name: raabitmq-credentials
                   key: RABBITMQ_URL
 
           resource:
@@ -61,7 +64,7 @@ spec:
             httpGet:
               path: /health
               port: 3001
-            initialDelaySeconds: 30
+            initialDelaySeconds: 10
             periodSeconds: 5
             failureThreshold: 5
             
@@ -76,10 +79,10 @@ spec:
 
           redinessProbe:
             httpGet:
-              path: /health
+              path: /ready
               port: 3001
-            initialDelaySeconds: 30
-            periodSeconds: 15
+            initialDelaySeconds: 15
+            periodSeconds: 10
             failureThreshold: 3
             timeoutSeconds: 3
           

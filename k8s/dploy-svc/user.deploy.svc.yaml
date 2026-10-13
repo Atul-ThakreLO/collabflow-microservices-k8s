@@ -37,8 +37,9 @@ spec:
                 name: user-service-config
           env:
             - name: RABBITMQ_URL
-              secretKeyRef:
-                - name: raabitmq-credentials
+              valueFrom:
+                secretKeyRef:
+                  name: raabitmq-credentials
                   key: RABBITMQ_URL
 
           resource:
@@ -46,7 +47,7 @@ spec:
               cpu: "100m"
               memory: "128Mi"
             limits:
-              cpu: "500m"
+              cpu: "300m"
               memory : "256Mi"
 
           livenessProbe:
@@ -58,7 +59,7 @@ spec:
 
           redinessProbe:
             httpGet:
-              path: /health
+              path: /ready
               port: 3002
             initialDelaySeconds: 15
             periodSeconds: 10
