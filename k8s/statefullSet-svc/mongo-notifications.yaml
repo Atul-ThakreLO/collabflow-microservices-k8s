@@ -11,9 +11,9 @@ metadata:
     name: mongo-notifications
     tier: database
 spec:
-  replica: 1
+  replicas: 1
   selector:
-    matchLables:
+    matchLabels:
       name: mongo-notifications
       tier: database
   template:
@@ -46,7 +46,7 @@ spec:
             periodSeconds: 15
             timeoutSeconds: 5
 
-          redinessProbe:
+          readinessProbe:
             exec:
               command: ["mongosh", "--eval", "db.adminCommand('ping')"]
             initialDelaySeconds: 15
@@ -62,10 +62,9 @@ spec:
         name: mongo-notif-data
       spec:
         accessModes: ["ReadWriteOnce"]
-        storageClassName: manual
         resources:
           requests:
-            storage: 1Gi
+            storage: 500Mi
 
 ---
 

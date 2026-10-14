@@ -1,0 +1,18 @@
+---
+# ── RabbitMQ Management (NodePort for dev access) ─────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-management
+  namespace: collabflow
+  labels:
+    app: rabbitmq
+spec:
+  type: NodePort
+  selector:
+    app: rabbitmq
+  ports:
+    - name: management
+      port: 15672
+      targetPort: 15672
+      nodePort: 31672  # Access via http://<node-ip>:31672

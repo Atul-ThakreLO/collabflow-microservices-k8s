@@ -6,5 +6,7 @@ dist/
 build/
 coverage/
 
+docs/
+
 k8s_solution/
 GUIDE.md

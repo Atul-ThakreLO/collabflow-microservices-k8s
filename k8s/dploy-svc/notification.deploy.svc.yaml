@@ -3,7 +3,7 @@
 ############################################################
 
 apiVersion: apps/v1
-kind: Deployments
+kind: Deployment
 metadata:
   name: notification-service
   namespace: collabflow
@@ -18,7 +18,7 @@ spec:
       maxSurge: 1
       maxUnavailable: 1
   selector:
-    matchLables:
+    matchLabels:
       name: notification-service
   template:
     metadata:
@@ -39,7 +39,7 @@ spec:
             - name: RABBITMQ_URL
               valueFrom:
                 secretKeyRef:
-                  name: raabitmq-credentials
+                  name: rabbitmq-credentials
                   key: RABBITMQ_URL
 
             - name: SMTP_USER
@@ -54,7 +54,7 @@ spec:
                   name: smtp-credentials
                   key: SMTP_PASS
 
-          resource:
+          resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
@@ -69,7 +69,7 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 10
 
-          redinessProbe:
+          readinessProbe:
             httpGet:
               path: /health
               port: 3004
@@ -86,10 +86,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: notification-service-svc
+  name: notification-service
   namespace: collabflow
   labels:
-    name: notification-service-svc
+    name: notification-service
 spec:
   type: ClusterIP
   selector:

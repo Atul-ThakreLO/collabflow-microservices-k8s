@@ -3,7 +3,7 @@
 ############################################################
 
 apiVersion: apps/v1
-kind: Deployments
+kind: Deployment
 metadata:
   name: frontend
   namespace: collabflow
@@ -18,7 +18,7 @@ spec:
       maxSurge: 1
       maxUnavailable: 0
   selector:
-    matchLables:
+    matchLabels:
       name: frontend
   template:
     metadata:
@@ -32,7 +32,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports: 
             - containerPort: 80
-          resource:
+          resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
@@ -47,7 +47,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 15
 
-          redinessProbe:
+          readinessProbe:
             httpGet:
               path: /nginx-health
               port: 80
@@ -64,16 +64,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-svc
+  name: frontend
   namespace: collabflow
   labels:
-    name: frontend-svc
+    name: frontend
 spec:
   type: ClusterIP
   selector:
     name: frontend
   ports:
     - name: http
-      port: 3005
-      targetPort: 3005
-      
+      port: 80
+      targetPort: 80      
