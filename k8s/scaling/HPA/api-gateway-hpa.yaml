@@ -1,5 +1,5 @@
 apiVersion: autoscaling/v2
-kind: HorizontalPodAutoScaler
+kind: HorizontalPodAutoscaler
 metadata:
   name: api-gateway-hpa
   namespace: collabflow
@@ -23,7 +23,7 @@ spec:
       resource:
         name: memory
         target:
-          type: Utlization
+          type: Utilization
           averageUtilization: 80
 
   behavior:
